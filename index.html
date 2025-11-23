@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cover Flow Carousel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --cfc-transition: 0.4s ease;
+        }
+
+        .cfc-wrapper {
+            position: relative;
+            padding: 2rem 3rem;
+            overflow: hidden;
+        }
+
+        .cfc-track {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .cfc-card {
+            position: absolute;
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            transition: all var(--cfc-transition);
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+        }
+
+        .cfc-card-active {
+            opacity: 1;
+            transform: scale(1) translateX(0);
+            z-index: 3;
+            pointer-events: auto;
+        }
+
+        .cfc-card-prev {
+            opacity: 0;
+            transform: scale(0.85) translateX(-120%);
+            z-index: 2;
+        }
+
+        .cfc-card-next {
+            opacity: 0;
+            transform: scale(0.85) translateX(120%);
+            z-index: 2;
+        }
+
+        .cfc-card-hidden {
+            opacity: 0;
+            transform: scale(0.7);
+            z-index: 1;
+        }
+
+        .cfc-card-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .cfc-quote {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .cfc-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .cfc-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .cfc-author-info {
+            flex: 1;
+        }
+
+        .cfc-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .cfc-title {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .cfc-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: opacity 0.3s;
+        }
+
+        .cfc-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .cfc-nav:hover:not(:disabled) {
+            background: #f8f9fa;
+        }
+
+        .cfc-nav-prev {
+            left: 0.5rem;
+        }
+
+        .cfc-nav-next {
+            right: 0.5rem;
+        }
+
+        .cfc-dots {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .cfc-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: none;
+            background: #ccc;
+            cursor: pointer;
+            padding: 0;
+            transition: background 0.3s;
+        }
+
+        .cfc-dot.active {
+            background: #333;
+        }
+
+        /* Tablet and up - show side cards */
+        @media (min-width: 768px) {
+            .cfc-card {
+                max-width: 450px;
+            }
+
+            .cfc-card-prev {
+                opacity: 0.6;
+                transform: scale(0.85) translateX(-80%);
+            }
+
+            .cfc-card-next {
+                opacity: 0.6;
+                transform: scale(0.85) translateX(80%);
+            }
+        }
+
+        /* Desktop */
+        @media (min-width: 992px) {
+            .cfc-wrapper {
+                padding: 2rem 5rem;
+            }
+
+            .cfc-card {
+                max-width: 550px;
+                padding: 2.5rem;
+            }
+
+            .cfc-quote {
+                font-size: 1.1rem;
+            }
+
+            .cfc-card-prev {
+                transform: scale(0.85) translateX(-70%);
+            }
+
+            .cfc-card-next {
+                transform: scale(0.85) translateX(70%);
+            }
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 767px) {
+            .cfc-wrapper {
+                padding: 1rem 2.5rem;
+            }
+
+            .cfc-track {
+                min-height: 350px;
+            }
+
+            .cfc-card {
+                max-width: 90%;
+                padding: 1.5rem;
+            }
+
+            .cfc-quote {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div id="carousel"></div>
+    </div>
+
+    <script type="module">
+        import { CoverFlowCarousel } from './CoverFlowCarousel.js'
+
+        const items = [
+            {
+                quote: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+                name: 'Stefan Haack',
+                title: 'Dipl.-Ing. (FH)',
+                avatar: 'https://i.pravatar.cc/100?img=1',
+                bgColor: '#e88b3c'
+            },
+            {
+                quote: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+                name: 'Alfred E. Neumann',
+                title: 'Autor und Politiker, Bürgermeister der Stadt Leipzig',
+                avatar: 'https://i.pravatar.cc/100?img=2',
+                bgColor: '#3d9a8b'
+            },
+            {
+                quote: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                name: 'Dr. Ernst Hansen',
+                title: 'Autor und Politiker, Bürgermeister der Stadt Leipzig',
+                avatar: 'https://i.pravatar.cc/100?img=3',
+                bgColor: '#a8d5e5'
+            }
+        ]
+
+        new CoverFlowCarousel('#carousel', { items })
+    </script>
+</body>
+</html>
