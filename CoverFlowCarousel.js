@@ -113,6 +113,7 @@ export class CoverFlowCarousel {
         this.dragStartX = x
         this.dragOffset = 0
         this.setTransitions(false)
+        this.updateCardPositions()
         this.track.classList.add('cfc-dragging')
     }
 
@@ -177,6 +178,9 @@ export class CoverFlowCarousel {
         const clampedOffset = Math.max(-maxDrag, Math.min(maxDrag, this.dragOffset))
         const dragPercent = (clampedOffset / trackWidth) * 100
 
+        // Match CSS media query breakpoints
+        const baseOffset = window.innerWidth >= 992 ? 70 : 80
+
         this.cards.forEach((card, index) => {
             const relativeIndex = index - this.currentIndex
             let translateX = 0
@@ -188,13 +192,13 @@ export class CoverFlowCarousel {
                 scale = 1 - Math.abs(clampedOffset) / maxDrag * 0.15
                 opacity = 1
             } else if (relativeIndex === -1) {
-                translateX = -80 + dragPercent * 0.5
+                translateX = -baseOffset + dragPercent * 0.5
                 if (clampedOffset > 0) {
                     scale = 0.85 + (clampedOffset / maxDrag) * 0.15
                     opacity = 0.6 + (clampedOffset / maxDrag) * 0.4
                 }
             } else if (relativeIndex === 1) {
-                translateX = 80 + dragPercent * 0.5
+                translateX = baseOffset + dragPercent * 0.5
                 if (clampedOffset < 0) {
                     scale = 0.85 + (Math.abs(clampedOffset) / maxDrag) * 0.15
                     opacity = 0.6 + (Math.abs(clampedOffset) / maxDrag) * 0.4
