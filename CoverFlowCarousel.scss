@@ -18,6 +18,11 @@ $cfc-dot-size: 8px;
     align-items: center;
     position: relative;
     min-height: 400px;
+    cursor: grab;
+
+    &.cfc-dragging {
+        cursor: grabbing;
+    }
 }
 
 // Cards

@@ -113,6 +113,7 @@ export class CoverFlowCarousel {
         this.dragStartX = x
         this.dragOffset = 0
         this.setTransitions(false)
+        this.track.classList.add('cfc-dragging')
     }
 
     handleDragMove(x) {
@@ -125,6 +126,7 @@ export class CoverFlowCarousel {
         if (!this.isDragging) return
         this.isDragging = false
         this.setTransitions(true)
+        this.track.classList.remove('cfc-dragging')
 
         const threshold = 80
         if (this.dragOffset < -threshold && this.currentIndex < this.items.length - 1) {
