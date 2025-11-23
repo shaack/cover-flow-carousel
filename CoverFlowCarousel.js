@@ -1,3 +1,44 @@
+class TextAutoFit {
+    constructor(element, options = {}) {
+        this.element = element
+        this.options = {
+            minFontSize: options.minFontSize || 10,
+            maxFontSize: options.maxFontSize || 200,
+            resolution: options.resolution || 1,
+            ...options
+        }
+        this.fit()
+    }
+
+    fit() {
+        const element = this.element
+        const style = window.getComputedStyle(element)
+        const paddingLeft = parseFloat(style.paddingLeft) || 0
+        const paddingRight = parseFloat(style.paddingRight) || 0
+        const paddingTop = parseFloat(style.paddingTop) || 0
+        const paddingBottom = parseFloat(style.paddingBottom) || 0
+
+        const containerWidth = element.clientWidth - paddingLeft - paddingRight
+        const containerHeight = element.clientHeight - paddingTop - paddingBottom
+
+        let low = this.options.minFontSize
+        let high = this.options.maxFontSize
+
+        while (low <= high) {
+            const fontSize = Math.floor((low + high) / 2)
+            element.style.fontSize = fontSize + 'px'
+
+            if (element.scrollWidth <= containerWidth && element.scrollHeight <= containerHeight) {
+                low = fontSize + this.options.resolution
+            } else {
+                high = fontSize - this.options.resolution
+            }
+        }
+
+        element.style.fontSize = high + 'px'
+    }
+}
+
 export class CoverFlowCarousel {
     constructor(container, options = {}) {
         this.container = typeof container === 'string'
@@ -52,6 +93,22 @@ export class CoverFlowCarousel {
         this.dots = this.container.querySelectorAll('.cfc-dot')
         this.prevBtn = this.container.querySelector('.cfc-nav-prev')
         this.nextBtn = this.container.querySelector('.cfc-nav-next')
+
+        // Apply auto-fit to all quotes
+        this.fitQuotes()
+
+        // Re-fit on window resize
+        let resizeTimeout
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout)
+            resizeTimeout = setTimeout(() => this.fitQuotes(), 100)
+        })
+    }
+
+    fitQuotes() {
+        this.container.querySelectorAll('.cfc-quote').forEach(quote => {
+            new TextAutoFit(quote, { minFontSize: 12, maxFontSize: 24 })
+        })
     }
 
     renderCard(item, index) {
