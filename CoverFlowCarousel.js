@@ -107,7 +107,7 @@ export class CoverFlowCarousel {
 
     fitQuotes() {
         this.container.querySelectorAll('.cfc-quote').forEach(quote => {
-            new TextAutoFit(quote, { minFontSize: 12, maxFontSize: 24 })
+            new TextAutoFit(quote, { minFontSize: 12, maxFontSize: 48 })
         })
     }
 
@@ -186,7 +186,7 @@ export class CoverFlowCarousel {
         this.setTransitions(true)
         this.track.classList.remove('cfc-dragging')
 
-        const threshold = 80
+        const threshold = 10
         if (this.dragOffset < -threshold && this.currentIndex < this.items.length - 1) {
             this.currentIndex++
         } else if (this.dragOffset > threshold && this.currentIndex > 0) {
