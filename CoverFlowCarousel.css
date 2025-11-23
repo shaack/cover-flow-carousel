@@ -9,7 +9,7 @@
     justify-content: center;
     align-items: center;
     position: relative;
-    min-height: 400px;
+    min-height: 70vh;
     cursor: grab
 }
 
@@ -21,6 +21,7 @@
     position: absolute;
     width: 100%;
     max-width: 600px;
+    height: 70vh;
     background-color: var(--card-bg);
     border-radius: .5rem;
     padding: 2rem;
@@ -184,10 +185,6 @@
 @media (max-width: 767px) {
     .cfc-wrapper {
         padding: 1rem 2.5rem
-    }
-
-    .cfc-track {
-        min-height: 350px
     }
 
     .cfc-card {
