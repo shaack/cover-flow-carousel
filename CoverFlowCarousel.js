@@ -5,8 +5,11 @@ export class CoverFlowCarousel {
             : container
         this.items = options.items || []
         this.currentIndex = 0
-        this.touchStartX = 0
-        this.touchEndX = 0
+
+        // Drag state
+        this.isDragging = false
+        this.dragStartX = 0
+        this.dragOffset = 0
 
         this.init()
     }
@@ -81,38 +84,74 @@ export class CoverFlowCarousel {
         })
 
         // Touch events for swipe
-        this.track.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: true })
-        this.track.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: true })
-        this.track.addEventListener('touchend', () => this.handleTouchEnd())
+        this.track.addEventListener('touchstart', (e) => this.handleDragStart(e.changedTouches[0].screenX), { passive: true })
+        this.track.addEventListener('touchmove', (e) => this.handleDragMove(e.changedTouches[0].screenX), { passive: true })
+        this.track.addEventListener('touchend', () => this.handleDragEnd())
+
+        // Mouse events for drag
+        this.track.addEventListener('mousedown', (e) => {
+            e.preventDefault()
+            this.handleDragStart(e.screenX)
+        })
+        document.addEventListener('mousemove', (e) => {
+            if (this.isDragging) this.handleDragMove(e.screenX)
+        })
+        document.addEventListener('mouseup', () => {
+            if (this.isDragging) this.handleDragEnd()
+        })
 
         // Wheel events for touchpad swipe
-        this.wheelDeltaX = 0
-        this.wheelTimeout = null
-        this.track.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false })
+        // this.track.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false })
 
         // Keyboard navigation
         this.container.setAttribute('tabindex', '0')
         this.container.addEventListener('keydown', (e) => this.handleKeydown(e))
     }
 
-    handleTouchStart(e) {
-        this.touchStartX = e.changedTouches[0].screenX
+    handleDragStart(x) {
+        this.isDragging = true
+        this.dragStartX = x
+        this.dragOffset = 0
+        this.setTransitions(false)
     }
 
-    handleTouchMove(e) {
-        this.touchEndX = e.changedTouches[0].screenX
+    handleDragMove(x) {
+        if (!this.isDragging) return
+        this.dragOffset = x - this.dragStartX
+        this.updateCardPositions()
     }
 
-    handleTouchEnd() {
-        const diff = this.touchStartX - this.touchEndX
-        const threshold = 50
+    handleDragEnd() {
+        if (!this.isDragging) return
+        this.isDragging = false
+        this.setTransitions(true)
 
-        if (Math.abs(diff) > threshold) {
-            if (diff > 0) {
-                this.next()
-            } else {
-                this.prev()
+        const threshold = 80
+        if (this.dragOffset < -threshold && this.currentIndex < this.items.length - 1) {
+            this.currentIndex++
+        } else if (this.dragOffset > threshold && this.currentIndex > 0) {
+            this.currentIndex--
+        }
+
+        this.dragOffset = 0
+        this.updateDisplay()
+    }
+
+    handleWheel(e) {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+            e.preventDefault()
+
+            if (!this.isDragging) {
+                this.isDragging = true
+                this.dragOffset = 0
+                this.setTransitions(false)
             }
+
+            this.dragOffset -= e.deltaX
+            this.updateCardPositions()
+
+            clearTimeout(this.wheelTimeout)
+            this.wheelTimeout = setTimeout(() => this.handleDragEnd(), 100)
         }
     }
 
@@ -124,23 +163,48 @@ export class CoverFlowCarousel {
         }
     }
 
-    handleWheel(e) {
-        // Detect horizontal scroll (touchpad swipe)
-        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-            e.preventDefault()
-            this.wheelDeltaX += e.deltaX
+    setTransitions(enabled) {
+        this.cards.forEach(card => {
+            card.style.transition = enabled ? '' : 'none'
+        })
+    }
 
-            clearTimeout(this.wheelTimeout)
-            this.wheelTimeout = setTimeout(() => {
-                const threshold = 50
-                if (this.wheelDeltaX > threshold) {
-                    this.next()
-                } else if (this.wheelDeltaX < -threshold) {
-                    this.prev()
+    updateCardPositions() {
+        const trackWidth = this.track.offsetWidth
+        const maxDrag = 150
+        const clampedOffset = Math.max(-maxDrag, Math.min(maxDrag, this.dragOffset))
+        const dragPercent = (clampedOffset / trackWidth) * 100
+
+        this.cards.forEach((card, index) => {
+            const relativeIndex = index - this.currentIndex
+            let translateX = 0
+            let scale = 0.85
+            let opacity = 0.6
+
+            if (relativeIndex === 0) {
+                translateX = dragPercent
+                scale = 1 - Math.abs(clampedOffset) / maxDrag * 0.15
+                opacity = 1
+            } else if (relativeIndex === -1) {
+                translateX = -80 + dragPercent * 0.5
+                if (clampedOffset > 0) {
+                    scale = 0.85 + (clampedOffset / maxDrag) * 0.15
+                    opacity = 0.6 + (clampedOffset / maxDrag) * 0.4
                 }
-                this.wheelDeltaX = 0
-            }, 50)
-        }
+            } else if (relativeIndex === 1) {
+                translateX = 80 + dragPercent * 0.5
+                if (clampedOffset < 0) {
+                    scale = 0.85 + (Math.abs(clampedOffset) / maxDrag) * 0.15
+                    opacity = 0.6 + (Math.abs(clampedOffset) / maxDrag) * 0.4
+                }
+            } else {
+                opacity = 0
+                scale = 0.7
+            }
+
+            card.style.transform = `scale(${scale}) translateX(${translateX}%)`
+            card.style.opacity = opacity
+        })
     }
 
     prev() {
@@ -165,10 +229,12 @@ export class CoverFlowCarousel {
     }
 
     updateDisplay() {
-        // Update cards
+        // Update cards with final positions
         this.cards.forEach((card, index) => {
             const offset = index - this.currentIndex
             card.classList.remove('cfc-card-active', 'cfc-card-prev', 'cfc-card-next', 'cfc-card-hidden')
+            card.style.transform = ''
+            card.style.opacity = ''
 
             if (offset === 0) {
                 card.classList.add('cfc-card-active')
