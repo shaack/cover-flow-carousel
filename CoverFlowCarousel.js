@@ -85,6 +85,11 @@ export class CoverFlowCarousel {
         this.track.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: true })
         this.track.addEventListener('touchend', () => this.handleTouchEnd())
 
+        // Wheel events for touchpad swipe
+        this.wheelDeltaX = 0
+        this.wheelTimeout = null
+        this.track.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false })
+
         // Keyboard navigation
         this.container.setAttribute('tabindex', '0')
         this.container.addEventListener('keydown', (e) => this.handleKeydown(e))
@@ -116,6 +121,25 @@ export class CoverFlowCarousel {
             this.prev()
         } else if (e.key === 'ArrowRight') {
             this.next()
+        }
+    }
+
+    handleWheel(e) {
+        // Detect horizontal scroll (touchpad swipe)
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+            e.preventDefault()
+            this.wheelDeltaX += e.deltaX
+
+            clearTimeout(this.wheelTimeout)
+            this.wheelTimeout = setTimeout(() => {
+                const threshold = 50
+                if (this.wheelDeltaX > threshold) {
+                    this.next()
+                } else if (this.wheelDeltaX < -threshold) {
+                    this.prev()
+                }
+                this.wheelDeltaX = 0
+            }, 50)
         }
     }
 
