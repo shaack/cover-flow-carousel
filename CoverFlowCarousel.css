@@ -20,15 +20,25 @@
 .cfc-card {
     position: absolute;
     width: 100%;
-    max-width: 600px;
+    max-width: 1200px;
     height: 70vh;
     background-color: var(--card-bg);
-    border-radius: .5rem;
-    padding: 2rem;
+    padding: 4rem 3rem;
     transition: all .4s ease;
     opacity: 0;
     transform: scale(0.8);
-    pointer-events: none
+    pointer-events: none;
+
+    clip-path: polygon(
+            0 0,           /* top-left */
+            70% 0,        /* top-right */
+            76% 4%,
+            100% 0,
+            100% 100%,     /* bottom-right */
+            0% 100%,      /* bottom edge point */
+            0 0          /* left edge point - creates triangle cut */
+    );
+
 }
 
 .cfc-card-active {
@@ -64,9 +74,11 @@
 
 .cfc-quote {
     font-size: 1rem;
-    line-height: 1.6;
+    line-height: 1.4;
     margin-bottom: 1.5rem;
-    flex-grow: 1
+    flex-grow: 1;
+    overflow: hidden;
+    min-height: 0
 }
 
 .cfc-author {
@@ -165,8 +177,8 @@
     }
 
     .cfc-card {
-        max-width: 550px;
-        padding: 2.5rem
+        max-width: 1200px;
+        padding: 4rem 3rem;
     }
 
     .cfc-card-prev {
@@ -189,7 +201,7 @@
 
     .cfc-card {
         max-width: 90%;
-        padding: 1.5rem
+        padding: 3rem 2rem;
     }
 
     .cfc-quote {
